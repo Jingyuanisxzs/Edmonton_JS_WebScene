@@ -1,52 +1,39 @@
 <!DOCTYPE html>
-  <html>
+<html>
   <head>
-    <title>Create a Map</title>
+  <title>Create a Map</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9" />
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-    <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css" />
-  
-    <script type="text/javascript">djConfig = { parseOnLoad:true };</script>
-  
-    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/"></script>
-    <style>
-    html,body,#mapDiv,.map.container{
-      padding:0;
-      margin:0;
-      height:100%;
-    }
-    #legendDiv{
-      background-color: #fff;
-      position: absolute !important;
-      z-index: 99;
-      top:10px;
-      right:20px;
-    }
-    </style>
-    <script type="text/javascript">
+    
+    
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css">
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/"></script>
+    <script>
       dojo.require("esri.map");
-      dojo.require("esri.arcgis.utils");
-      dojo.require("esri.dijit.Legend");
-      function init(){
-        var webmapid = '1a40fa5cc1ab4569b79f45444d728067';
-        esri.arcgis.utils.createMap(webmapid,'mapDiv').then(function(response){
-      map = response.map;
-      
-      var legend = new esri.dijit.Legend({
-        map:map,
-        layerInfos:(esri.arcgis.utils.getLegendLayers(response))
-      },"legendDiv");
-      legend.startup(); 
-     });  
+      var map;
+      function init() {
+        map = new esri.Map("mapDiv",{
+          center: [-56.049, 38.485],
+          zoom: 3,
+          basemap: "streets"
+        });
       }
-  
-      dojo.addOnLoad(init);
+      dojo.ready(init);
     </script>
-    <body>
-    <div id="mapDiv"></div>
-    <div id="legendDiv"></div>
+    
+    
+    <body class="claro">
+      <div id="mapDiv"></div>
     </body>
+    
+    <style>
+      html, body, #mapDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+      }
+    </style>
   </head>
-
-  </html>
+  
+</html>
