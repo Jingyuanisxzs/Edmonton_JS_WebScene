@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
@@ -5,7 +6,14 @@
       name="viewport"
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
     />
-    <title>SceneView - 4.11</title>
+    <title>Sketch in 3D - 4.11</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.11/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.11/"></script>
+
     <style>
       html,
       body,
@@ -16,15 +24,6 @@
         width: 100%;
       }
 
-      #hitInfo {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        padding: 12px;
-        background-color: rgba(0, 0, 0, 0.8);
-        color: white;
-      }
-      
       #sketchPanel {
         padding: 10px;
         background-color: rgba(255, 255, 255, 0.8);
@@ -33,30 +32,42 @@
       .esri-button {
         margin: 2px;
       }
+      
+      #hitInfo {
+        position:absolute;
+        bottom: 12px;
+        right: 12px;
+        padding: 12px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+      }
     </style>
-
-    <link
-      rel="stylesheet"
-      href="https://js.arcgis.com/4.11/esri/themes/light/main.css"
-    />
-    <script src="https://js.arcgis.com/4.11/"></script>
-
-    
-    
     <script>
       require([
-        "esri/WebScene",
+        "esri/Map",
         "esri/views/SceneView",
+        "esri/layers/GraphicsLayer",
+        "esri/widgets/Sketch/SketchViewModel",
+        "esri/symbols/WebStyleSymbol",
+        "esri/WebScene",
         "esri/Graphic"
-      ], function(WebScene, SceneView, Graphic, GraphicsLayer, SketchViewModel, WebStyleSymbol) {
-        // Load webscene and display it in a SceneView
+      ], function(
+        Map,
+        SceneView,
+        GraphicsLayer,
+        SketchViewModel,
+        WebStyleSymbol,
+        WebScene,
+        Graphic
+      ) {
+        // the layer where the graphics are sketched
+        const gLayer = new GraphicsLayer();
         const webscene = new WebScene({
           portalItem: {
             id: "9a542f6755274436985617a462ffdf44"
           }
         });
 
-        // create the SceneView
         const view = new SceneView({
           container: "viewDiv",
           map: webscene,
@@ -67,10 +78,12 @@
 
         const blue = [82, 82, 122, 0.9];
         const white = [255, 255, 255, 0.8];
-        
+
+
+        // polygon symbol used for sketching the extruded building footprints
         const extrudedPolygon = {
           type: "polygon-3d",
-          symbolLayers:[
+          symbolLayers: [
             {
               type: "extrude",
               size: 10, // extrude by 10 meters
@@ -85,7 +98,8 @@
             }
           ]
         };
-        
+
+        // polyline symbol used for sketching routes
         const route = {
           type: "line-3d",
           symbolLayers: [
@@ -105,10 +119,11 @@
             }
           ]
         };
-      
+
+        // point symbol used for sketching points of interest
         const point = {
           type: "point-3d",
-          symbolLayer:[
+          symbolLayers: [
             {
               type: "icon",
               size: "20px",
@@ -123,8 +138,72 @@
             }
           ]
         };
+
+        // define the SketchViewModel and pass in the symbols for each geometry type
+        const sketchVM = new SketchViewModel({
+          layer: gLayer,
+          view: view,
+          pointSymbol: point,
+          polygonSymbol: extrudedPolygon,
+          polylineSymbol: route
+        });
+
+        // add an event listener for the Delete key to delete
+        // the graphics that are currently being updated
+        view.on("key-up", function(evt) {
+          if (evt.key === "Delete") {
+            gLayer.removeMany(sketchVM.updateGraphics);
+            sketchVM.reset();
+          }
+        });
+
+        // after drawing the geometry, enter the update mode to update the geometry
+        // and the deactivate the buttons
+        sketchVM.on("create", function(event) {
+          if (event.state === "complete") {
+            sketchVM.update(event.graphic);
+            deactivateButtons();
+          }
+        });
+
+        const drawButtons = Array.prototype.slice.call(
+          document.getElementsByClassName("esri-button")
+        );
+
+        // set event listeners to activate sketching graphics
+        drawButtons.forEach(function(btn) {
+          btn.addEventListener("click", function(event) {
+            deactivateButtons();
+            event.target.classList.add("esri-button--secondary");
+            // to activate sketching the create method is called passing in the geometry type
+            // from the data-type attribute of the html element
+            sketchVM.create(event.target.getAttribute("data-type"));
+          });
+        });
+
+        function deactivateButtons() {
+          drawButtons.forEach(function(element) {
+            element.classList.remove("esri-button--secondary");
+          });
+        }
+        view.ui.add("sketchPanel", "top-right");
+      });
+      
+      function displayHide(){
+          var x = document.getElementById("hitInfo");
+          if (x.style.display === "none") {
+            x.style.display = "block";
+            hitTestFunc();
+          } else {
+            x.style.display = "none";
+          }
+      }
         
+      function hitTestFunc(){
         // symbol for points on objects
+        const WebScene = require("esri/WebScene");
+        const SceneView = require("esri/views/SceneView");
+        const Graphic = require("esri/Graphic");
         let objectPointSymbol = {
           type: "point-3d",
           symbolLayers: [
@@ -282,69 +361,35 @@
           hitresultground.textContent = "0 m";
           hitresultcount.textContent = "-";
         });
-      });
+      }
       
-      
-      // const sketchVM = new SketchViewModel({
-      //   layer: glayer,
-      //   view: view,
-      //   polygonSymbol: {
-      //     type: "polygon-3d",
-      //     symbol
-      //   }
-      // });
-      const sketchVM = new SketchViewModel({
-          layer: gLayer,
-          view: view,
-          pointSymbol: point,
-          polygonSymbol: extrudedPolygon,
-          polylineSymbol: route
-      });
-      
-              view.on("key-up", function(evt) {
-          if (evt.key === "Delete") {
-            gLayer.removeMany(sketchVM.updateGraphics);
-            sketchVM.reset();
-          }
-        });
-
-        // after drawing the geometry, enter the update mode to update the geometry
-        // and the deactivate the buttons
-        sketchVM.on("create", function(event) {
-          if (event.state === "complete") {
-            sketchVM.update(event.graphic);
-            deactivateButtons();
-          }
-        });
-        
-         const drawButtons = Array.prototype.slice.call(
-          document.getElementsByClassName("esri-button")
-        );
-
-        // set event listeners to activate sketching graphics
-        drawButtons.forEach(function(btn) {
-          btn.addEventListener("click", function(event) {
-            deactivateButtons();
-            event.target.classList.add("esri-button--secondary");
-            // to activate sketching the create method is called passing in the geometry type
-            // from the data-type attribute of the html element
-            sketchVM.create(event.target.getAttribute("data-type"));
-          });
-        });
-
-        function deactivateButtons() {
-          drawButtons.forEach(function(element) {
-            element.classList.remove("esri-button--secondary");
-          });
-        }
-
-        view.ui.add("sketchPanel", "top-right");
     </script>
   </head>
 
   <body>
     <div id="viewDiv"></div>
-      <div id="sketchPanel" class="esri-widget">
+    <div id="hitInfo" class="esri-widget">
+      <p>Click in the view and see the hit objects:</p>
+      <table
+        class="esri-widget"
+        style="color: white; background-color: rgba(0, 0, 0, 0);"
+      >
+        <tr>
+          <td>Ground hit distance:</td>
+          <td id="hitresultground">0 m</td>
+        </tr>
+        <tr>
+          <td>Objects hit:</td>
+          <td id="hitresultcount">-</td>
+        </tr>
+      </table>
+
+      <br />
+      <button id="reset" class="esri-button">
+        Reset
+      </button>
+    </div>
+    <div id="sketchPanel" class="esri-widget">
       <button id="extrudedPolygon" data-type="polygon" class="esri-button">
         Draw a building
       </button>
@@ -354,7 +399,7 @@
       <button id="line" data-type="polyline" class="esri-button">
         Draw a route
       </button>
-      <button id="hittestpoint" data-type = "point" class="esri-button">
+      <button id="hittestpoint" data-type = "point" class="esri-button" onclick = "displayHide()">
         Hit Test
       </button>  
     </div>
