@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
@@ -6,7 +5,7 @@
       name="viewport"
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
     />
-    <title>Intro to SceneView - Create a 3D map - 4.11</title>
+    <title>SceneView - 4.11</title>
     <style>
       html,
       body,
@@ -16,6 +15,24 @@
         height: 100%;
         width: 100%;
       }
+
+      #hitInfo {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 12px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+      }
+      
+      #sketchPanel {
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.8);
+      }
+
+      .esri-button {
+        margin: 2px;
+      }
     </style>
 
     <link
@@ -24,24 +41,322 @@
     />
     <script src="https://js.arcgis.com/4.11/"></script>
 
+    
+    
     <script>
-      require(["esri/Map", "esri/views/SceneView"], function(Map, SceneView) {
-        var map = new Map({
-          basemap: "streets",
-          ground: "world-elevation"
+      require([
+        "esri/WebScene",
+        "esri/views/SceneView",
+        "esri/Graphic"
+      ], function(WebScene, SceneView, Graphic, GraphicsLayer, SketchViewModel, WebStyleSymbol) {
+        // Load webscene and display it in a SceneView
+        const webscene = new WebScene({
+          portalItem: {
+            id: "9a542f6755274436985617a462ffdf44"
+          }
         });
 
-        var view = new SceneView({
+        // create the SceneView
+        const view = new SceneView({
           container: "viewDiv",
-          map: map,
-          scale: 5000000,
-          center: [-101.17, 21.78]
+          map: webscene,
+          highlightOptions: {
+            haloOpacity: 0
+          }
+        });
+
+        const blue = [82, 82, 122, 0.9];
+        const white = [255, 255, 255, 0.8];
+        
+        const extrudedPolygon = {
+          type: "polygon-3d",
+          symbolLayers:[
+            {
+              type: "extrude",
+              size: 10, // extrude by 10 meters
+              material: {
+                color: white
+              },
+              edges: {
+                type: "solid",
+                size: "3px",
+                color: blue
+              }
+            }
+          ]
+        };
+        
+        const route = {
+          type: "line-3d",
+          symbolLayers: [
+            {
+              type: "line",
+              size: "3px",
+              material: {
+                color: blue
+              }
+            },
+            {
+              type: "line",
+              size: "10px",
+              material: {
+                color: white
+              }
+            }
+          ]
+        };
+      
+        const point = {
+          type: "point-3d",
+          symbolLayer:[
+            {
+              type: "icon",
+              size: "20px",
+              resource: { primitive: "kite" },
+              outline: {
+                color: blue,
+                size: "3px"
+              },
+              material: {
+                color: white
+              }
+            }
+          ]
+        };
+        
+        // symbol for points on objects
+        let objectPointSymbol = {
+          type: "point-3d",
+          symbolLayers: [
+            {
+              type: "icon", // autocasts as new IconSymbol3DLayer()
+              size: 12, // points
+              resource: { primitive: "circle" },
+              material: { color: "dodgerblue" },
+              outline: {
+                color: "deepskyblue"
+              }
+            }
+          ]
+        };
+
+        // symbol for first object hit point
+        let firstObjectPointSymbol = {
+          type: "point-3d",
+          symbolLayers: [
+            {
+              type: "icon", // autocasts as new IconSymbol3DLayer()
+              size: 12, // points
+              resource: { primitive: "circle" },
+              material: { color: "darkblue" },
+              outline: {
+                color: "deepskyblue"
+              }
+            }
+          ]
+        };
+
+        // symbol for the ground point
+        const groundPointSymbol = {
+          type: "point-3d",
+          symbolLayers: [
+            {
+              type: "icon", // autocasts as new IconSymbol3DLayer()
+              size: 12, // points
+              resource: { primitive: "circle" },
+              material: { color: "darkgreen" },
+              outline: {
+                color: "limegreen"
+              }
+            }
+          ]
+        };
+        // line symbol which connects the points
+        const lineSymbol = {
+          type: "line-3d", // autocasts as new LineSymbol3D()
+          symbolLayers: [
+            {
+              type: "line", // autocasts as new LineSymbol3DLayer()
+              material: {
+                color: "dodgerblue"
+              },
+              size: 4
+            }
+          ]
+        };
+
+        let highlightedList = [];
+        const hitresultground = document.getElementById("hitresultground");
+        const hitresultcount = document.getElementById("hitresultcount");
+
+        view.on("immediate-click", function(event) {
+          // get the returned hitTestResult
+          // and draw points on all return mappoints and connect to a line
+          // (using promise chaining for cleaner code and error handling)
+          view
+            .hitTest(event, { exclude: [view.graphics] })
+            .then(function(hitTestResult) {
+              // print the information to the panel
+              hitresultground.textContent =
+                Math.round(hitTestResult.ground.distance) + " m";
+              hitresultcount.textContent = hitTestResult.results.length;
+
+              let lastHit = null;
+              if (hitTestResult.results.length > 0) {
+                lastHit =
+                  hitTestResult.results[hitTestResult.results.length - 1];
+                // create point graphic for each hit on objects
+                hitTestResult.results.forEach(function(result, index) {
+                  const hitObject = new Graphic({
+                    geometry: result.mapPoint,
+                    symbol:
+                      index === 0 ? firstObjectPointSymbol : objectPointSymbol
+                  });
+                  view.graphics.add(hitObject);
+
+                  let graphic = result.graphic;
+                  // change the layer to be transparent
+                  graphic.layer.opacity = 0.8;
+                  // highlight the hit object
+                  view.whenLayerView(graphic.layer).then(function(layerView) {
+                    highlightedList.push(layerView.highlight(graphic));
+                  });
+                });
+              }
+
+              if (hitTestResult.ground.mapPoint) {
+                if (lastHit) {
+                  if (hitTestResult.ground.distance > lastHit.distance) {
+                    // an object under the ground could be more far away,
+                    // check first the distance before set the ground as last point
+                    lastHit = hitTestResult.ground;
+                  }
+                } else {
+                  lastHit = hitTestResult.ground;
+                }
+                // create point graphic for the ground
+                const hitGround = new Graphic({
+                  geometry: hitTestResult.ground.mapPoint,
+                  symbol: groundPointSymbol
+                });
+                view.graphics.add(hitGround);
+              }
+
+              if (lastHit) {
+                // Draw a line to connect all hit objects and ground
+                let linePoints = [
+                  [
+                    view.camera.position.x,
+                    view.camera.position.y,
+                    view.camera.position.z
+                  ],
+                  [lastHit.mapPoint.x, lastHit.mapPoint.y, lastHit.mapPoint.z]
+                ];
+
+                view.graphics.add({
+                  geometry: {
+                    type: "polyline",
+                    paths: linePoints,
+                    spatialReference: view.spatialReference
+                  },
+
+                  symbol: lineSymbol
+                });
+              }
+            })
+            .catch(function(error) {
+              console.error(error);
+            });
+        });
+        document.getElementById("reset").addEventListener("click", function() {
+          // remove all graphics
+          view.graphics.removeAll();
+          // remove the highlights
+          highlightedList.forEach(function(highlightObject) {
+            highlightObject.remove();
+          });
+          highlightedList = [];
+          // disable the transparency
+          view.map.layers.getItemAt(0).opacity = 1;
+          // remove the result
+          hitresultground.textContent = "0 m";
+          hitresultcount.textContent = "-";
         });
       });
+      
+      
+      // const sketchVM = new SketchViewModel({
+      //   layer: glayer,
+      //   view: view,
+      //   polygonSymbol: {
+      //     type: "polygon-3d",
+      //     symbol
+      //   }
+      // });
+      const sketchVM = new SketchViewModel({
+          layer: gLayer,
+          view: view,
+          pointSymbol: point,
+          polygonSymbol: extrudedPolygon,
+          polylineSymbol: route
+      });
+      
+              view.on("key-up", function(evt) {
+          if (evt.key === "Delete") {
+            gLayer.removeMany(sketchVM.updateGraphics);
+            sketchVM.reset();
+          }
+        });
+
+        // after drawing the geometry, enter the update mode to update the geometry
+        // and the deactivate the buttons
+        sketchVM.on("create", function(event) {
+          if (event.state === "complete") {
+            sketchVM.update(event.graphic);
+            deactivateButtons();
+          }
+        });
+        
+         const drawButtons = Array.prototype.slice.call(
+          document.getElementsByClassName("esri-button")
+        );
+
+        // set event listeners to activate sketching graphics
+        drawButtons.forEach(function(btn) {
+          btn.addEventListener("click", function(event) {
+            deactivateButtons();
+            event.target.classList.add("esri-button--secondary");
+            // to activate sketching the create method is called passing in the geometry type
+            // from the data-type attribute of the html element
+            sketchVM.create(event.target.getAttribute("data-type"));
+          });
+        });
+
+        function deactivateButtons() {
+          drawButtons.forEach(function(element) {
+            element.classList.remove("esri-button--secondary");
+          });
+        }
+
+        view.ui.add("sketchPanel", "top-right");
     </script>
   </head>
 
   <body>
     <div id="viewDiv"></div>
+      <div id="sketchPanel" class="esri-widget">
+      <button id="extrudedPolygon" data-type="polygon" class="esri-button">
+        Draw a building
+      </button>
+      <button id="point" data-type="point" class="esri-button">
+        Draw a point of interest
+      </button>
+      <button id="line" data-type="polyline" class="esri-button">
+        Draw a route
+      </button>
+      <button id="hittestpoint" data-type = "point" class="esri-button">
+        Hit Test
+      </button>  
+    </div>
   </body>
 </html>
