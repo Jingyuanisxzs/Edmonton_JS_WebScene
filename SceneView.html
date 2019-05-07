@@ -68,7 +68,7 @@
           }
         });
 
-        const view = new SceneView({
+        window.view = new SceneView({
           container: "viewDiv",
           map: webscene,
           highlightOptions: {
@@ -142,7 +142,7 @@
         // define the SketchViewModel and pass in the symbols for each geometry type
         const sketchVM = new SketchViewModel({
           layer: gLayer,
-          view: view,
+          view: window.view,
           pointSymbol: point,
           polygonSymbol: extrudedPolygon,
           polylineSymbol: route
@@ -150,7 +150,7 @@
 
         // add an event listener for the Delete key to delete
         // the graphics that are currently being updated
-        view.on("key-up", function(evt) {
+        window.view.on("key-up", function(evt) {
           if (evt.key === "Delete") {
             gLayer.removeMany(sketchVM.updateGraphics);
             sketchVM.reset();
@@ -186,7 +186,9 @@
             element.classList.remove("esri-button--secondary");
           });
         }
-        view.ui.add("sketchPanel", "top-right");
+        window.view.ui.add("sketchPanel", "top-right");
+        var x = document.getElementById("hitInfo");
+        x.style.display = "none";
       });
       
       function displayHide(){
@@ -196,6 +198,7 @@
             hitTestFunc();
           } else {
             x.style.display = "none";
+            window.removeHandler.remove();
           }
       }
         
@@ -268,12 +271,12 @@
         const hitresultground = document.getElementById("hitresultground");
         const hitresultcount = document.getElementById("hitresultcount");
 
-        view.on("immediate-click", function(event) {
+        window.removeHandler = window.view.on("immediate-click", function(event) {
           // get the returned hitTestResult
           // and draw points on all return mappoints and connect to a line
           // (using promise chaining for cleaner code and error handling)
-          view
-            .hitTest(event, { exclude: [view.graphics] })
+          window.view
+            .hitTest(event, { exclude: [window.view.graphics] })
             .then(function(hitTestResult) {
               // print the information to the panel
               hitresultground.textContent =
@@ -291,13 +294,13 @@
                     symbol:
                       index === 0 ? firstObjectPointSymbol : objectPointSymbol
                   });
-                  view.graphics.add(hitObject);
+                  window.view.graphics.add(hitObject);
 
                   let graphic = result.graphic;
                   // change the layer to be transparent
                   graphic.layer.opacity = 0.8;
                   // highlight the hit object
-                  view.whenLayerView(graphic.layer).then(function(layerView) {
+                  window.view.whenLayerView(graphic.layer).then(function(layerView) {
                     highlightedList.push(layerView.highlight(graphic));
                   });
                 });
@@ -318,25 +321,25 @@
                   geometry: hitTestResult.ground.mapPoint,
                   symbol: groundPointSymbol
                 });
-                view.graphics.add(hitGround);
+                window.view.graphics.add(hitGround);
               }
 
               if (lastHit) {
                 // Draw a line to connect all hit objects and ground
                 let linePoints = [
                   [
-                    view.camera.position.x,
-                    view.camera.position.y,
-                    view.camera.position.z
+                    window.view.camera.position.x,
+                    window.view.camera.position.y,
+                    window.view.camera.position.z
                   ],
                   [lastHit.mapPoint.x, lastHit.mapPoint.y, lastHit.mapPoint.z]
                 ];
 
-                view.graphics.add({
+                window.view.graphics.add({
                   geometry: {
                     type: "polyline",
                     paths: linePoints,
-                    spatialReference: view.spatialReference
+                    spatialReference: window.view.spatialReference
                   },
 
                   symbol: lineSymbol
@@ -349,14 +352,14 @@
         });
         document.getElementById("reset").addEventListener("click", function() {
           // remove all graphics
-          view.graphics.removeAll();
+          window.view.graphics.removeAll();
           // remove the highlights
           highlightedList.forEach(function(highlightObject) {
             highlightObject.remove();
           });
           highlightedList = [];
           // disable the transparency
-          view.map.layers.getItemAt(0).opacity = 1;
+          window.view.map.layers.getItemAt(0).opacity = 1;
           // remove the result
           hitresultground.textContent = "0 m";
           hitresultcount.textContent = "-";
