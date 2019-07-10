@@ -1,0 +1,11 @@
+{
+  "name": "Edmonton_JS_WebScene",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jingyuanisxzs/Edmonton_JS_WebScene/"
+  }
+}
