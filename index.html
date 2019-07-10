@@ -1,39 +1,59 @@
 <!DOCTYPE html>
 <html>
-  <head>
-  <title>Create a Map</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-    
-    
-    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css">
-    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/"></script>
-    <script>
-      dojo.require("esri.map");
-      var map;
-      function init() {
-        map = new esri.Map("mapDiv",{
-          center: [-56.049, 38.485],
-          zoom: 3,
-          basemap: "streets"
-        });
-      }
-      dojo.ready(init);
-    </script>
-    
-    
-    <body class="claro">
-      <div id="mapDiv"></div>
-    </body>
-    
-    <style>
-      html, body, #mapDiv {
-        padding: 0;
-        margin: 0;
-        height: 100%;
-      }
-    </style>
-  </head>
-  
+<head>
+  <meta charset="utf-8" />
+  <meta
+          name="viewport"
+          content="initial-scale=1,maximum-scale=1,user-scalable=no"
+  />
+  <title>OpenStreetMapLayer - 4.12</title>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+
+  <link
+          rel="stylesheet"
+          href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+  />
+  <script src="https://js.arcgis.com/4.12/"></script>
+
+  <script>
+    require(["esri/views/SceneView", "esri/WebScene"], function(
+            SceneView,
+            WebScene
+    ) {
+      var scene = new WebScene({
+        portalItem: {
+          id: "c1fa39dddfab4ced9a225d938e0df2a5"
+        }
+      });
+
+      var view = new SceneView({
+        map: scene,
+        container: "viewDiv",
+        padding: {
+          top: 40
+        }
+      });
+
+      view.when(function() {
+
+        var title = scene.portalItem.title;
+        titleDiv.innerHTML = title;
+      });
+    });
+  </script>
+</head>
+
+<body>
+<div id="viewDiv"></div>
+</body>
 </html>
