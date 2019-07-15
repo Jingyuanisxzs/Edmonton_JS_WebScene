@@ -17,6 +17,23 @@
       height: 100%;
       width: 100%;
     }
+
+    #overviewDiv {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      width: 300px;
+      height: 200px;
+      border: 1px solid black;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    #extentDiv {
+      background-color: rgba(0,0,0,0.5);
+      position: absolute;
+      z-index: 2;
+    }
   </style>
 
   <link
@@ -26,9 +43,13 @@
   <script src="https://js.arcgis.com/4.12/"></script>
 
   <script>
-    require(["esri/views/SceneView", "esri/WebScene"], function(
+    require(["esri/views/SceneView", "esri/WebScene", "esri/Map", "esri/views/MapView", "esri/core/watchUtils","esri/geometry/Point"], function(
             SceneView,
-            WebScene
+            WebScene,
+            Map,
+            MapView,
+            watchUtils,
+            Point
     ) {
       var scene = new WebScene({
         portalItem: {
@@ -44,6 +65,62 @@
         }
       });
 
+      var overviewMap = new Map({
+        basemap: "topo"
+      });
+
+      var mapView = new MapView({
+        container: "overviewDiv",
+        map: overviewMap,
+        constraints: {
+          rotationEnabled: false
+        }
+      });
+
+      mapView.ui.components = [];
+
+      var extentDiv = document.getElementById("extentDiv");
+
+      mapView.when(function(){
+        view.watch("extent", updateOverviewExtent);
+        mapView.watch("extent",updateOverviewExtent);
+
+        watchUtils.when(view, "stationary", updateOverview);
+
+        function updateOverview(){
+          mapView.goTo({
+            center: view.center,
+            scale: view.scale*2*Math.max(view.width/mapView.width, view.height/mapView.height)
+          });
+        }
+
+        function updateOverviewExtent(){
+          var extent = view.extent;
+
+          var bottomLeft = mapView.toScreen(
+                  new Point({
+                    x: extent.xmin,
+                    y: extent.ymin,
+                    spatialReference: extent.spatialReference
+                  })
+          );
+
+          var topRight = mapView.toScreen(
+                  new Point({
+                    x: extent.xmax,
+                    y: extent.ymax,
+                    spatialReference: extent.spatialReference
+                  })
+          );
+
+          extentDiv.style.top = topRight.y + "px";
+          extentDiv.style.left = bottomLeft.x + "px";
+
+          extentDiv.style.height = bottomLeft.y - topRight.y + "px";
+          extentDiv.style.width = topRight.x - bottomLeft.x + "px";
+        }
+
+      });
       view.when(function() {
 
         var title = scene.portalItem.title;
@@ -55,5 +132,6 @@
 
 <body>
 <div id="viewDiv"></div>
+<div id="overviewDiv"><div id = "extentDiv"></div></div>
 </body>
 </html>
