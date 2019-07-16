@@ -70,7 +70,7 @@
         var overviewMap = new Map({
           basemap: "topo"
         });
-        console.log("e");
+
         var mapView = new MapView({
           container: "overviewDiv",
           map: overviewMap,
@@ -78,61 +78,51 @@
             rotationEnabled: false
           }
         });
-        console.log("d");
+        
         mapView.ui.components = [];
 
         var extentDiv = document.getElementById("extentDiv");
 
-        console.log("c");
-        // while(!view.ready()){
-        //   sleep(100);
-        //   console.log("a");
-        // }
-        view.ready();
-        console.log("b");
-        mapView.when(function(){
-          view.watch("extent", updateOverviewExtent);
-          mapView.watch("extent",updateOverviewExtent);
+        view.when(function(){
+          mapView.when(function(){
+            view.watch("extent", updateOverviewExtent);
+            mapView.watch("extent",updateOverviewExtent);
 
-          watchUtils.when(view, "stationary", updateOverview);
+            watchUtils.when(view, "stationary", updateOverview);
 
-          function updateOverview(){
-            mapView.goTo({
-              center: view.center,
-              scale: view.scale*2*Math.max(view.width/mapView.width, view.height/mapView.height)
-            });
-          }
+            function updateOverview(){
+              mapView.goTo({
+                center: view.center,
+                scale: view.scale*2*Math.max(view.width/mapView.width, view.height/mapView.height)
+              });
+            }
 
-          function updateOverviewExtent(){
-            var extent = view.extent;
-            console.log(view);
+            function updateOverviewExtent(){
+              var extent = view.extent;
 
-            var bottomLeft = mapView.toScreen(
-                    new Point({
-                      x: extent.xmin,
-                      y: extent.ymin,
-                      spatialReference: extent.spatialReference
-                    })
-            );
+              var bottomLeft = mapView.toScreen(
+                      new Point({
+                        x: extent.xmin,
+                        y: extent.ymin,
+                        spatialReference: extent.spatialReference
+                      })
+              );
 
-            var topRight = mapView.toScreen(
-                    new Point({
-                      x: extent.xmax,
-                      y: extent.ymax,
-                      spatialReference: extent.spatialReference
-                    })
-            );
+              var topRight = mapView.toScreen(
+                      new Point({
+                        x: extent.xmax,
+                        y: extent.ymax,
+                        spatialReference: extent.spatialReference
+                      })
+              );
 
-            extentDiv.style.top = topRight.y + "px";
-            extentDiv.style.left = bottomLeft.x + "px";
+              extentDiv.style.top = topRight.y + "px";
+              extentDiv.style.left = bottomLeft.x + "px";
 
-            extentDiv.style.height = bottomLeft.y - topRight.y + "px";
-            extentDiv.style.width = topRight.x - bottomLeft.x + "px";
-          }
-
-        });
-
-        view.when(function() {
+              extentDiv.style.height = bottomLeft.y - topRight.y + "px";
+              extentDiv.style.width = topRight.x - bottomLeft.x + "px";
+            }
+          });
           var title = scene.portalItem.title;
           titleDiv.innerHTML = title;
         });
