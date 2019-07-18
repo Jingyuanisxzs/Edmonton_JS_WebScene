@@ -148,6 +148,9 @@
   <script src="https://js.arcgis.com/4.12/"></script>
 
   <script>
+
+    let overviewVisible = 0;
+
     require(["esri/views/SceneView", "esri/WebScene", "esri/Map", "esri/views/MapView", "esri/core/watchUtils","esri/geometry/Point", "dojo/ready"], function(
             SceneView,
             WebScene,
@@ -157,7 +160,7 @@
             Point,
             ready
     ) {
-      ready(function(){
+      ready(function (){
         var scene = new WebScene({
           portalItem: {
             id: "c1fa39dddfab4ced9a225d938e0df2a5"
@@ -183,7 +186,6 @@
             rotationEnabled: false
           }
         });
-        mapView.ui.components = [];
 
         var extentDiv = document.getElementById("extentDiv");
 
@@ -230,19 +232,7 @@
         });
       });
     });
-    let overviewVisible = true;
 
-    function showHideOverviewMap(){
-      if (overviewVisible){
-        overviewVisible = false;
-        document.getElementById('extentDiv').style.zIndex = -1;
-        document.getElementById('overviewDiv').style.zIndex = -2;
-      } else{
-        overviewVisible = true;
-        document.getElementById('extentDiv').style.zIndex = 2;
-        document.getElementById('overviewDiv').style.zIndex = 1;
-      }
-    }
 
     function openNav() {
       document.getElementById("mySidebar").style.width = "250px";
@@ -252,6 +242,19 @@
     function closeNav() {
       document.getElementById("mySidebar").style.width = "0";
       document.getElementById("main").style.marginLeft= "0";
+    }
+
+    function showHideOverviewMap(){
+      if (overviewVisible === 0){
+         document.getElementById('extentDiv').style.display = "none";
+         document.getElementById('overviewDiv').style.display = "none";
+      }
+      if (overviewVisible === 2){
+        document.getElementById('extentDiv').style.display = null;
+        document.getElementById('overviewDiv').style.display = null;
+      }
+      console.log(overviewVisible);
+      overviewVisible = (overviewVisible+1)%4;
     }
   </script>
 </head>
