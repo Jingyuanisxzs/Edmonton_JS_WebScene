@@ -1,130 +1,144 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <meta
-          name="viewport"
-          content="initial-scale=1,maximum-scale=1,user-scalable=no"
-  />
-  <title>Edmonton 3D Web Map: Strathcona</title>
+    <meta charset="utf-8"/>
+    <meta
+            name="viewport"
+            content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Edmonton 3D Web Map: Strathcona</title>
 
-  <style>
-    html,
-    body,
-    #viewDiv {
-      padding: 0;
-      margin: 0;
-      height: 100%;
-      width: 100%;
-    }
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
 
-    #main {
-      transition: margin-left .5s;
-      padding: 16px;
-    }
+        #main {
+            padding: 16px;
+            display: none;
+        }
 
-    .sideBar {
-      height: 100%;
-      width: 260px;
-      position: fixed;
-      z-index: 1;
-      top: 0;
-      right: 0;
-      background-color: #dde6c2;
-      overflow-x: hidden;
-      padding-top: 20px;
-    }
+        .sideBar {
+            height: 100%;
+            width: 260px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            right: 0;
+            background-color: #dde6c2;
+            overflow-x: hidden;
+            padding-top: 20px;
+        }
 
-    .sideBar a {
-      padding: 8px 8px 8px 32px;
-      text-decoration: none;
-      font-size: 20px;
-      color: #817c0b;
-      display: block;
-      transition: 0.3s;
-    }
+        .sideBar a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 20px;
+            color: #817c0b;
+            display: block;
+            transition: 0.3s;
+        }
 
-    .sideBar a:hover {
-      color: #99f12b;
-    }
-    .sideBar .closebtn {
-      position: absolute;
-      top: 0;
-      right: 20px;
-      font-size: 36px;
-      margin-left: 10px;
-    }
-    .openbtn {
-      font-size: 20px;
-      cursor: pointer;
-      background-color: #1d1c1c;
-      color: #f9f9f9;
-      padding: 10px 15px;
-      border: none;
-      z-index: 2;
-    }
-    .openbtn:hover {
-      background-color: #8c8a8f;
-    }
-    #overviewDiv {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      width: 450px;
-      height: 300px;
-      border: 1px solid black;
-      z-index: 1;
-      overflow: hidden;
-    }
+        .sideBar a:hover {
+            color: #dde6c2;
+        }
 
-    #extentDiv {
-      background-color: rgba(0,0,0,0.5);
-      position: absolute;
-      z-index: 2;
-    }
+        .sideBar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 20px;
+            font-size: 36px;
+            margin-left: 10px;
+        }
 
-    #panel-checkbox {
-      display: block;
-      position: relative;
-      left: 50px;
-      width: 32px;
-      height: 16px;
-      border-radius: 8px;
-      background-color: lightblue;
-      cursor: pointer;
-    }
+        #sideBarText{
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 20px;
+            color: #817c0b;
+            display: block;
+            transition: 0.3s;
+        }
 
-    #panel-checkbox.selected {
-      background-color: #2e56ff;
-    }
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #1d1c1c;
+            color: #f9f9f9;
+            padding: 10px 15px;
+            border: none;
+            z-index: 2;
+        }
 
-    #panel-checkbox-thumb {
-      display: inline-block;
-      position: absolute;
-      left: 0;
-      width: 16px;
-      height: 16px;
-      border-radius: 8px;
-      background-color: white;
-      transition: left 250ms ease;
-    }
+        .openbtn:hover {
+            background-color: #8c8a8f;
+        }
 
-    #panel-checkbox-thumb.selected {
-      left: 16px;
-    }
-  </style>
+        #overviewDiv {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            width: 450px;
+            height: 300px;
+            border: 1px solid black;
+            z-index: 1;
+            overflow: hidden;
+        }
 
-  <link
-          rel="stylesheet"
-          href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
-  />
-  <script src="https://js.arcgis.com/4.12/"></script>
+        #extentDiv {
+            background-color: rgba(0, 0, 0, 0.5);
+            position: absolute;
+            z-index: 2;
+        }
 
-  <script>
+        #panel-checkbox {
+            display: block;
+            position: relative;
+            top: 10px;
+            left: 110px;
+            width: 48px;
+            height: 24px;
+            border-radius: 12px;
+            background-color: rgba(129, 124, 11, 0.65);
+            cursor: pointer;
+        }
 
-    let overviewVisible = true;
+        #panel-checkbox.selected {
+            background-color: #817c0b;
+        }
 
-    require(["esri/views/SceneView", "esri/WebScene", "esri/Map", "esri/views/MapView", "esri/core/watchUtils","esri/geometry/Point", "dojo/ready"], function(
+        #panel-checkbox-thumb {
+            display: inline-block;
+            position: absolute;
+            left: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 12px;
+            background-color: white;
+            transition: left 250ms ease;
+        }
+
+        #panel-checkbox-thumb.selected {
+            left: 24px;
+        }
+    </style>
+
+    <link
+            rel="stylesheet"
+            href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.12/"></script>
+
+    <script>
+
+        let overviewVisible = true;
+
+        require(["esri/views/SceneView", "esri/WebScene", "esri/Map", "esri/views/MapView", "esri/core/watchUtils", "esri/geometry/Point", "dojo/ready"], function (
             SceneView,
             WebScene,
             Map,
@@ -132,122 +146,129 @@
             watchUtils,
             Point,
             ready
-    ) {
-      ready(function (){
-        var scene = new WebScene({
-          portalItem: {
-            id: "c1fa39dddfab4ced9a225d938e0df2a5"
-          }
+        ) {
+            ready(function () {
+                var scene = new WebScene({
+                    portalItem: {
+                        id: "c1fa39dddfab4ced9a225d938e0df2a5"
+                    }
+                });
+
+                var view = new SceneView({
+                    map: scene,
+                    container: "viewDiv",
+                    padding: {
+                        top: 40
+                    }
+                });
+
+                var overviewMap = new Map({
+                    basemap: "topo"
+                });
+
+                var mapView = new MapView({
+                    container: "overviewDiv",
+                    map: overviewMap,
+                    constraints: {
+                        rotationEnabled: false
+                    }
+                });
+
+                var extentDiv = document.getElementById("extentDiv");
+
+                document.getElementById('extentDiv').style.display = null;
+                document.getElementById('overviewDiv').style.display = null;
+                document.getElementById('panel-checkbox').classList.add('selected');
+                document.getElementById('panel-checkbox-thumb').classList.add('selected');
+
+                view.when(function () {
+                    mapView.when(function () {
+                        view.watch("extent", updateOverviewExtent);
+                        mapView.watch("extent", updateOverviewExtent);
+
+                        watchUtils.when(view, "stationary", updateOverview);
+
+                        function updateOverview() {
+                            mapView.goTo({
+                                center: view.center,
+                                scale: view.scale * 2 * Math.max(view.width / mapView.width, view.height / mapView.height)
+                            });
+                        }
+
+                        function updateOverviewExtent() {
+                            var extent = view.extent;
+
+                            var bottomLeft = mapView.toScreen(
+                                new Point({
+                                    x: extent.xmin,
+                                    y: extent.ymin,
+                                    spatialReference: extent.spatialReference
+                                })
+                            );
+
+                            var topRight = mapView.toScreen(
+                                new Point({
+                                    x: extent.xmax,
+                                    y: extent.ymax,
+                                    spatialReference: extent.spatialReference
+                                })
+                            );
+
+                            extentDiv.style.top = topRight.y + "px";
+                            extentDiv.style.left = bottomLeft.x + "px";
+
+                            extentDiv.style.height = bottomLeft.y - topRight.y + "px";
+                            extentDiv.style.width = topRight.x - bottomLeft.x + "px";
+                        }
+                    });
+                });
+            });
         });
 
-        var view = new SceneView({
-          map: scene,
-          container: "viewDiv",
-          padding: {
-            top: 40
-          }
-        });
 
-        var overviewMap = new Map({
-          basemap: "topo"
-        });
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "260px";
+            document.getElementById("main").style.display = "none";
+        }
 
-        var mapView = new MapView({
-          container: "overviewDiv",
-          map: overviewMap,
-          constraints: {
-            rotationEnabled: false
-          }
-        });
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.display = "block";
+        }
 
-        var extentDiv = document.getElementById("extentDiv");
-
-        view.when(function(){
-          mapView.when(function(){
-            view.watch("extent", updateOverviewExtent);
-            mapView.watch("extent",updateOverviewExtent);
-
-            watchUtils.when(view, "stationary", updateOverview);
-
-            function updateOverview(){
-              mapView.goTo({
-                center: view.center,
-                scale: view.scale*2*Math.max(view.width/mapView.width, view.height/mapView.height)
-              });
+        function showHideOverviewMap() {
+            overviewVisible = !overviewVisible;
+            if (overviewVisible) {
+                document.getElementById('extentDiv').style.display = null;
+                document.getElementById('overviewDiv').style.display = null;
+                document.getElementById('panel-checkbox').classList.add('selected');
+                document.getElementById('panel-checkbox-thumb').classList.add('selected');
+            } else {
+                document.getElementById('extentDiv').style.display = "none";
+                document.getElementById('overviewDiv').style.display = "none";
+                document.getElementById('panel-checkbox').classList.remove('selected');
+                document.getElementById('panel-checkbox-thumb').classList.remove('selected');
             }
-
-            function updateOverviewExtent(){
-              var extent = view.extent;
-
-              var bottomLeft = mapView.toScreen(
-                      new Point({
-                        x: extent.xmin,
-                        y: extent.ymin,
-                        spatialReference: extent.spatialReference
-                      })
-              );
-
-              var topRight = mapView.toScreen(
-                      new Point({
-                        x: extent.xmax,
-                        y: extent.ymax,
-                        spatialReference: extent.spatialReference
-                      })
-              );
-
-              extentDiv.style.top = topRight.y + "px";
-              extentDiv.style.left = bottomLeft.x + "px";
-
-              extentDiv.style.height = bottomLeft.y - topRight.y + "px";
-              extentDiv.style.width = topRight.x - bottomLeft.x + "px";
-            }
-          });
-        });
-      });
-    });
-
-
-    function openNav() {
-      document.getElementById("mySidebar").style.width = "250px";
-      document.getElementById("main").style.marginLeft = "250px";
-    }
-
-    function closeNav() {
-      document.getElementById("mySidebar").style.width = "0";
-      document.getElementById("main").style.marginLeft= "0";
-    }
-
-    function showHideOverviewMap(){
-      overviewVisible = !overviewVisible;
-      if (overviewVisible){
-        document.getElementById('extentDiv').style.display = null;
-        document.getElementById('overviewDiv').style.display = null;
-        document.getElementById('panel-checkbox').classList.add('selected');
-        document.getElementById('panel-checkbox-thumb').classList.add('selected');
-      } else {
-        document.getElementById('extentDiv').style.display = "none";
-        document.getElementById('overviewDiv').style.display = "none";
-        document.getElementById('panel-checkbox').classList.remove('selected');
-        document.getElementById('panel-checkbox-thumb').classList.remove('selected');
-      }
-    }
-  </script>
+        }
+    </script>
 </head>
 
 <body>
 <div id="viewDiv"></div>
-<div id="overviewDiv"><div id = "extentDiv"></div></div>
+<div id="overviewDiv">
+    <div id="extentDiv"></div>
+</div>
 <div id="mySidebar" class="sideBar">
-  <a href="#"></a>
-  <a href="#">Hide/Show Overview Map</a>
-  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
-  <div id="panel-checkbox" onclick="showHideOverviewMap()">
-    <div id="panel-checkbox-thumb"></div>
-  </div>
+    <a href="#"></a>
+    <div id="sideBarText">Hide/Show Overview Map</div>
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
+    <div id="panel-checkbox" onclick="showHideOverviewMap()">
+        <div id="panel-checkbox-thumb"></div>
+    </div>
 </div>
 
 <div id="main">
-  <button class="openbtn" onclick="openNav()">Toggle Side Bar</button>
+    <button class="openbtn" onclick="openNav()">Open Side Bar</button>
 </div>
 </body>
 </html>
