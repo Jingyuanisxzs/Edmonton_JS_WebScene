@@ -61,6 +61,7 @@
       color: #f9f9f9;
       padding: 10px 15px;
       border: none;
+      z-index: 2;
     }
     .openbtn:hover {
       background-color: #8c8a8f;
@@ -82,62 +83,34 @@
       z-index: 2;
     }
 
-    .switch {
+    #panel-checkbox {
+      display: block;
       position: relative;
-      display: inline-block;
-      width: 60px;
-      height: 34px;
       left: 50px;
-      top: 20px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
+      width: 32px;
+      height: 16px;
+      border-radius: 8px;
+      background-color: lightblue;
       cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      -webkit-transition: .4s;
-      transition: .4s;
     }
 
-    .slider:before {
+    #panel-checkbox.selected {
+      background-color: #2e56ff;
+    }
+
+    #panel-checkbox-thumb {
+      display: inline-block;
       position: absolute;
-      content: "";
-      height: 26px;
-      width: 26px;
-      left: 4px;
-      bottom: 4px;
+      left: 0;
+      width: 16px;
+      height: 16px;
+      border-radius: 8px;
       background-color: white;
-      -webkit-transition: .4s;
-      transition: .4s;
+      transition: left 250ms ease;
     }
 
-    input:checked + .slider {
-      background-color: #6cc6ff;
-    }
-
-    input:checked + .slider:before {
-      -webkit-transform: translateX(26px);
-      -ms-transform: translateX(26px);
-      transform: translateX(26px);
-    }
-
-    /* Rounded sliders */
-    .slider.round {
-      border-radius: 34px;
-    }
-
-    .slider.round:before {
-      border-radius: 50%;
+    #panel-checkbox-thumb.selected {
+      left: 16px;
     }
   </style>
 
@@ -149,7 +122,7 @@
 
   <script>
 
-    let overviewVisible = 0;
+    let overviewVisible = true;
 
     require(["esri/views/SceneView", "esri/WebScene", "esri/Map", "esri/views/MapView", "esri/core/watchUtils","esri/geometry/Point", "dojo/ready"], function(
             SceneView,
@@ -245,16 +218,18 @@
     }
 
     function showHideOverviewMap(){
-      if (overviewVisible === 0){
-         document.getElementById('extentDiv').style.display = "none";
-         document.getElementById('overviewDiv').style.display = "none";
-      }
-      if (overviewVisible === 2){
+      overviewVisible = !overviewVisible;
+      if (overviewVisible){
         document.getElementById('extentDiv').style.display = null;
         document.getElementById('overviewDiv').style.display = null;
+        document.getElementById('panel-checkbox').classList.add('selected');
+        document.getElementById('panel-checkbox-thumb').classList.add('selected');
+      } else {
+        document.getElementById('extentDiv').style.display = "none";
+        document.getElementById('overviewDiv').style.display = "none";
+        document.getElementById('panel-checkbox').classList.remove('selected');
+        document.getElementById('panel-checkbox-thumb').classList.remove('selected');
       }
-      console.log(overviewVisible);
-      overviewVisible = (overviewVisible+1)%4;
     }
   </script>
 </head>
@@ -266,10 +241,9 @@
   <a href="#"></a>
   <a href="#">Hide/Show Overview Map</a>
   <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
-  <label class="switch" onclick = "showHideOverviewMap()">
-    <input type="checkbox" checked>
-    <span class="slider round"></span>
-  </label>
+  <div id="panel-checkbox" onclick="showHideOverviewMap()">
+    <div id="panel-checkbox-thumb"></div>
+  </div>
 </div>
 
 <div id="main">
